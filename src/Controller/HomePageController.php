@@ -14,6 +14,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class HomePageController extends Controller
 {
 
+    private $httpHeaders = [
+        'Access-Control-Allow-Headers' => 'Access-Control-Allow-Origin, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
+        'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+//        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Origin' => 'http://localhost:3000',
+        'Content-Type' => 'application/json;charset=UTF-8',
+        'Access-Control-Allow-Credentials' => 'true',
+    ];
+
     /**
      * @Route("/walker", name="walker")
      */
@@ -60,15 +69,15 @@ class HomePageController extends Controller
             $result = $parsedXML->channel;
         }
 
-        $httpHeaders = [
-            'Access-Control-Allow-Headers' => 'Access-Control-Allow-Origin, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
-            'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Origin' => '*',
-            'Content-Type' => 'application/json;charset=UTF-8',
-            'Access-Control-Allow-Credentials' => 'true',
-        ];
+//        $httpHeaders = [
+//            'Access-Control-Allow-Headers' => 'Access-Control-Allow-Origin, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
+//            'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+//            'Access-Control-Allow-Origin' => '*',
+//            'Content-Type' => 'application/json;charset=UTF-8',
+//            'Access-Control-Allow-Credentials' => 'true',
+//        ];
 
-        $response = new JsonResponse($result, '200', $httpHeaders);
+        $response = new JsonResponse($result, '200', $this->$httpHeaders);
 
         return $response;
 
@@ -81,6 +90,7 @@ class HomePageController extends Controller
     {
         echo 'Name: ' . $name;
 
+
         //  return new Response(base.html);
         return $this->render('base.html.twig');
         //return $this->render('');
@@ -90,16 +100,60 @@ class HomePageController extends Controller
     /**
      * @Route("/email", name="email")
      */
-    public function sendEmail(Request $request)
+    public function userEmailDataProcess(Request $request)
     {
-        $responseTest = [
-            'all' => $request->getContent(),
-            'wow' => $request->get('test'),
-        ];
+        // $request->headers->get('referer');
+        // $tempArray = explode('/', $request->headers->get('referer'));
+        // $uri = end($tempArray);
+
+        try {
+            $requestArray = json_decode($request->getContent(), true);
+
+            $resultEmail = 'test';
+
+            $resultEmail = $this->sendEmail(
+                $requestArray['emailRecipient'],
+                $requestArray['name'],
+                $requestArray['email'],
+                $requestArray['message']
+            );
+
+            $responseTest = [
+                'emailRecipient' => $requestArray['emailRecipient'],
+                'senderName' => $requestArray['name'],
+                'senderEmail' => $requestArray['email'],
+                'senderMessage' => $requestArray['message'],
+                'resultEmail' => $resultEmail,
+            ];
 
 
-        return new JsonResponse(['request' => $responseTest]);
+            return new JsonResponse(['request' => $responseTest], '200', $this->httpHeaders);
 
+        } catch (\Exception $exception) {
+            return new JsonResponse(['request' => 'BAD REQUEST!'], '404', $this->httpHeaders);
+        }
+
+    }
+
+
+    public function sendEmail($emailRecipient, $senderName, $senderEmail, $senderMessage)
+    {
+
+        $sendTo = '';
+        switch ($emailRecipient) {
+            case 'father Tikhon':
+                $sendTo = 'ek35mm@gmail.com';
+                break;
+            case 'father Anatoly':
+                $sendTo = 'evgene.pozniak@gmail.com';
+                break;
+            default:
+        }
+
+        $message = $senderMessage . ' (Email: ' . $senderEmail . ')';
+        $subject = 'Email from: ' . $senderName;
+
+     return  mail($sendTo, $subject, $senderMessage);
     }
 
 
