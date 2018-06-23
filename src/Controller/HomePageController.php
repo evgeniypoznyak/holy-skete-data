@@ -17,8 +17,8 @@ class HomePageController extends Controller
     private $httpHeaders = [
         'Access-Control-Allow-Headers' => 'Access-Control-Allow-Origin, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
         'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-//        'Access-Control-Allow-Origin' => '*',
-        'Access-Control-Allow-Origin' => 'http://localhost:3000',
+        'Access-Control-Allow-Origin' => '*',
+        // 'Access-Control-Allow-Origin' => 'http://localhost:3000',
         'Content-Type' => 'application/json;charset=UTF-8',
         'Access-Control-Allow-Credentials' => 'true',
     ];
@@ -108,26 +108,32 @@ class HomePageController extends Controller
 
         try {
             $requestArray = json_decode($request->getContent(), true);
+            $resultEmail = false;
 
-            $resultEmail = 'test';
+            if ($requestArray) {
+                $emailRecipient = trim($requestArray['emailRecipient']);
+                $senderName = trim($requestArray['name']);
+                $senderEmail = trim($requestArray['email']);
+                $senderMessage = trim($requestArray['message']);
 
-            $resultEmail = $this->sendEmail(
-                $requestArray['emailRecipient'],
-                $requestArray['name'],
-                $requestArray['email'],
-                $requestArray['message']
-            );
+                $resultEmail = $this->sendEmail($emailRecipient, $senderName, $senderEmail, $senderMessage);
 
-            $responseTest = [
-                'emailRecipient' => $requestArray['emailRecipient'],
-                'senderName' => $requestArray['name'],
-                'senderEmail' => $requestArray['email'],
-                'senderMessage' => $requestArray['message'],
-                'resultEmail' => $resultEmail,
-            ];
+                $responseTest = [
+                    'emailRecipient' => $emailRecipient,
+                    'senderName' => $senderName,
+                    'senderEmail' => $senderEmail,
+                    'senderMessage' => $senderMessage,
+                    'resultEmail' => $resultEmail,
+                ];
 
+                if ($resultEmail) {
+                    return new JsonResponse(['request' => $responseTest], '200', $this->httpHeaders);
+                }
+            }
+            else {
+                return new JsonResponse(['request' => 'email in process...'], '200', $this->httpHeaders);
+            }
 
-            return new JsonResponse(['request' => $responseTest], '200', $this->httpHeaders);
 
         } catch (\Exception $exception) {
             return new JsonResponse(['request' => 'BAD REQUEST!'], '404', $this->httpHeaders);
@@ -153,7 +159,7 @@ class HomePageController extends Controller
         $message = $senderMessage . ' (Email: ' . $senderEmail . ')';
         $subject = 'Email from: ' . $senderName;
 
-     return  mail($sendTo, $subject, $senderMessage);
+        return mail($sendTo, $subject, $senderMessage);
     }
 
 
