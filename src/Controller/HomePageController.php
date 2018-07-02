@@ -14,6 +14,9 @@ use Symfony\Component\Routing\Annotation\Route;
 class HomePageController extends Controller
 {
 
+    // php bin/console server:run
+
+
     private $httpHeaders = [
         'Access-Control-Allow-Headers' => 'Access-Control-Allow-Origin, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
         'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
@@ -77,7 +80,7 @@ class HomePageController extends Controller
 //            'Access-Control-Allow-Credentials' => 'true',
 //        ];
 
-        $response = new JsonResponse($result, '200', $this->$httpHeaders);
+        $response = new JsonResponse($result, '200', $this->httpHeaders);
 
         return $response;
 
@@ -106,12 +109,14 @@ class HomePageController extends Controller
         // $tempArray = explode('/', $request->headers->get('referer'));
         // $uri = end($tempArray);
 
+
         try {
             $requestArray = json_decode($request->getContent(), true);
             $resultEmail = false;
 
             if ($requestArray) {
                 $emailRecipient = trim($requestArray['emailRecipient']);
+//                return new JsonResponse(['request' => 'OK'], '200', $this->httpHeaders);
                 $senderName = trim($requestArray['name']);
                 $senderEmail = trim($requestArray['email']);
                 $senderMessage = trim($requestArray['message']);
@@ -126,17 +131,21 @@ class HomePageController extends Controller
                     'resultEmail' => $resultEmail,
                 ];
 
+                return new JsonResponse(['request' => $requestArray], '200', $this->httpHeaders);
+
+
                 if ($resultEmail) {
-                    return new JsonResponse(['request' => $responseTest], '200', $this->httpHeaders);
+                    // return new JsonResponse(['request' => 'OK'], '200', $this->httpHeaders);
+                    return new JsonResponse(['request' => $requestArray], '200', $this->httpHeaders);
                 }
-            }
-            else {
+
+            } else {
                 return new JsonResponse(['request' => 'email in process...'], '200', $this->httpHeaders);
             }
 
 
         } catch (\Exception $exception) {
-            return new JsonResponse(['request' => 'BAD REQUEST!'], '404', $this->httpHeaders);
+            return new JsonResponse(['request' => $requestArray], '404', $this->httpHeaders);
         }
 
     }
