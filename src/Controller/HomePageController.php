@@ -49,7 +49,7 @@ class HomePageController extends Controller
 //        $content =  $guzzle->get('https://azbyka.ru/days/');
         $crawler = new Crawler($result);
         $arr = [];
-        foreach ($crawler as $domElement) {
+        foreach ( $crawler as $domElement ){
             $arr [] = $domElement->nodeName;
         }
 
@@ -157,10 +157,12 @@ class HomePageController extends Controller
         $sendTo = '';
         switch ($emailRecipient) {
             case 'father Tikhon':
-                $sendTo = 'ek35mm@gmail.com';
+                // $sendTo = 'ek35mm@gmail.com';
+                $sendTo = 'rocor.tikhon@gmail.com';
                 break;
             case 'father Anatoly':
                 $sendTo = 'evgene.pozniak@gmail.com';
+                //$sendTo = 'setruta@mail.ru';
                 break;
             default:
         }
@@ -168,7 +170,7 @@ class HomePageController extends Controller
         $message = $senderMessage . ' (Email: ' . $senderEmail . ')';
         $subject = 'Email from: ' . $senderName;
 
-        return mail($sendTo, $subject, $senderMessage);
+        return mail($sendTo, $subject, $message);
     }
 
 
