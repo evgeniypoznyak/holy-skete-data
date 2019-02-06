@@ -60,29 +60,46 @@ class HomePageController extends Controller
 
     /**
      * @Route("/rss", name="rss")
+     * @param Request $request
+     * @return JsonResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function getRssFeed(Request $request)
     {
-        $url = $request->get('url');
-        $guzzle = new Client();
-        $rssFeed = $guzzle->request('GET', $url);
-        $parsedXML = simplexml_load_string($rssFeed->getBody()->getContents());
+        try {
+            $url = $request->get('url');
+            $guzzle = new Client();
+            $rssFeed = $guzzle->request('GET', $url);
+            $content = $rssFeed->getBody()->getContents();
+            $string = str_replace("//<![CDATA[","",$content);
+            $rss = str_replace("//]]>","",$string);
 
-        if ($parsedXML->channel) {
-            $result = $parsedXML->channel;
+//            $rss =  preg_replace('/^\s*\/\/<!\[CDATA\[([\s\S]*)\/\/\]\]>\s*\z/',
+//                '$1',
+//                $rssFeed->getBody()->getContents());
+
+//            $rss = $rssFeed->getBody()->getContents();
+
+            return new JsonResponse(
+                [
+                    'url' => $request->get('url'),
+                    'rss' => simplexml_load_string($rss),
+                    'status' => 'ok',
+                ],
+                JsonResponse::HTTP_CREATED,
+                $this->httpHeaders
+            );
+
+        } catch (Exception $e) {
+            return new JsonResponse(
+                [
+                    'message' => 'Something went wrong',
+                    'status' => '500',
+                ],
+                JsonResponse::HTTP_CREATED,
+                $this->httpHeaders
+            );
         }
-
-//        $httpHeaders = [
-//            'Access-Control-Allow-Headers' => 'Access-Control-Allow-Origin, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
-//            'Access-Control-Allow-Methods' => 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-//            'Access-Control-Allow-Origin' => '*',
-//            'Content-Type' => 'application/json;charset=UTF-8',
-//            'Access-Control-Allow-Credentials' => 'true',
-//        ];
-
-        $response = new JsonResponse($result, '200', $this->httpHeaders);
-
-        return $response;
 
     }
 
