@@ -71,19 +71,16 @@ class HomePageController extends Controller
             $guzzle = new Client();
             $rssFeed = $guzzle->request('GET', $url);
             $content = $rssFeed->getBody()->getContents();
-            $string = str_replace("//<![CDATA[","",$content);
-            $rss = str_replace("//]]>","",$string);
-
-//            $rss =  preg_replace('/^\s*\/\/<!\[CDATA\[([\s\S]*)\/\/\]\]>\s*\z/',
-//                '$1',
-//                $rssFeed->getBody()->getContents());
-
-//            $rss = $rssFeed->getBody()->getContents();
+            $simpleXMLE = simplexml_load_string(
+                $content,
+                'SimpleXMLElement',
+                LIBXML_NOCDATA | LIBXML_NOBLANKS
+            );
 
             return new JsonResponse(
                 [
                     'url' => $request->get('url'),
-                    'rss' => simplexml_load_string($rss),
+                    'rss' => $simpleXMLE,
                     'status' => 'ok',
                 ],
                 JsonResponse::HTTP_CREATED,
